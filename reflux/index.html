@@ -1,0 +1,98 @@
+<html>
+  <head>
+    <script
+      src="https://cdn.jsdelivr.net/refluxjs/0.2.11/reflux.min.js"></script>
+    <script
+      src="https://cdn.jsdelivr.net/react/0.14.0-rc1/react.min.js"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/JSXTransformer.js"></script>
+
+    <script type="text/jsx">
+      /* Actions */
+      var ItemActions = Reflux.createActions({
+        "create": {}
+      });
+
+      /* Store */
+      var itemStore = Reflux.createStore({
+        init: function() {
+          this.items = [];
+
+          this.listenTo(ItemActions.create, this._append);
+        },
+
+        getInitialState: function() {
+          return {"items": this.items};
+        },
+
+        _append: function(item) {
+          this.items.push(item);
+          this.trigger(this.getInitialState());
+        }
+
+      });
+
+      /* UI/React */
+      var InputItem = React.createClass({
+          onCreate: function(text) {
+              var inputText = this.refs.inputText.getDOMNode();
+              this.props.onCreate(inputText.value);
+              inputText.value = "";
+          },
+
+          render: function() {
+              return (
+                  <div>
+                    <input type="text"
+                           ref="inputText" />
+                    <button onClick={() => this.onCreate()}>+</button>
+                  </div>
+              );
+          }
+      });
+
+      var ItemList = React.createClass({
+        render: function() {
+          var renderedItems = this.props.items.map(function(item) {
+            return (
+              <div>{item.name}</div>
+            );
+          });
+
+          return (
+            <div>
+              {renderedItems}
+              <br/>
+              Total: {this.props.items.length}
+            </div>
+          );
+        }
+      });
+
+      var App = React.createClass({
+        mixins: [
+          Reflux.connect(itemStore, "itemStore")
+        ],
+
+        createNew: function(text) {
+          ItemActions.create({name: text});
+        },
+
+        render: function() {
+          return (
+            <div>
+              <InputItem onCreate={this.createNew} />
+              <hr/>
+              <ItemList items={this.state.itemStore.items} />
+            </div>
+          );
+        }
+      });
+
+      React.render(<App />, document.getElementById("app"));
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+</html>
